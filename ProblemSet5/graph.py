@@ -1,8 +1,8 @@
 # 6.00.2x Problem Set 5
 # Graph optimization
-#
+
 # A set of data structures to represent graphs
-#
+
 
 class Node(object):
     def __init__(self, name):
@@ -103,25 +103,60 @@ class WeightedDigraph(Digraph):
         """
         self.nodes = set([])
         self.edges = {}
+
+    def addNode(self, node):
+        if node in self.nodes:
+            # Even though self.nodes is a Set, we want to do this to make sure we
+            # don't add a duplicate entry for the same node in the self.edges list.
+            raise ValueError('Duplicate node')
+        else:
+            self.nodes.add(node)
+            self.edges[node] = {}
+
     def addEdge(self, edge):
         src = edge.getSource()
         dest = edge.getDestination()
         if not(src in self.nodes and dest in self.nodes):
             raise ValueError('Node not in graph')
-        self.edges[src].append([dest])
-        self.edges[src][-1].append((edge.getTotalDistance(),
-                                    edge.getOutdoorDistance()))
+        #  self.edges[src].append([dest])
+        #  self.edges[src][-1].append((edge.getTotalDistance(),
+                                    #  edge.getOutdoorDistance()))
+        self.edges[src][dest] = (edge.getTotalDistance(),
+                                 edge.getOutdoorDistance())
+
     def childrenOf(self, node):
-        res = []
-        temp = self.edges[node]
-        for tup in temp:
-            res.append(tup[0])
-        return res
+        return self.edges[node].keys()
+        #  res = []
+        #  temp = self.edges[node]
+        #  for tup in temp:
+            #  res.append(tup[0])
+        #  return res
+
+    def get_distance(self, start, end):
+        verbose = False
+        if verbose:
+            print "start", start
+            print "end", end
+        if not isinstance(start, Node):
+            start = Node(start)
+        if not isinstance(end, Node):
+            end = Node(end)
+        if not(start in self.nodes and end in self.nodes):
+            raise ValueError('Node not in graph')
+        if end not in self.edges[start].keys():
+            raise KeyError("No edge from {} to {}".format(start, end))
+        return float(self.edges[start][end][0])
+
+    def get_outside_distance(self, start, end):
+        if not(start in self.nodes and end in self.nodes):
+            raise ValueError('Node not in graph')
+        return float(self.edges[start][end][1])
+
     def __str__(self):
         res = ''
         for node in self.nodes:
-            for edge in self.edges[node]:
-                res += '{}->{} ({}, {})\n'.format(node, edge[0],
-                                                  str(float(edge[1][0])),
-                                                  str(float(edge[1][1])))
+            for edge in self.edges[node].keys():
+                res += '{}->{} ({}, {})\n'.format(node, edge,
+                    str(float(self.get_distance(node, edge))),
+                    str(float(self.get_outside_distance(node, edge))))
         return res
